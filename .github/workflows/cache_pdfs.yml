@@ -1,0 +1,42 @@
+name: ASX Public PDF Cache
+
+on:
+  schedule:
+    - cron: "0 22 * * 0-4"
+    - cron: "*/30 0-10 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      backfill:
+        description: "Backfill the last 7 days"
+        required: false
+        default: "false"
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  cache:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install httpx beautifulsoup4
+      - name: Cache ASX PDFs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.backfill }}" = "true" ]; then
+            python cache_pdfs.py --backfill
+          else
+            python cache_pdfs.py
+          fi
