@@ -7,8 +7,10 @@ on:
       - "cache_pdfs.py"
       - ".github/workflows/cache_pdfs.yml"
   schedule:
-    - cron: "0 22 * * 0-4"
-    - cron: "*/30 0-10 * * 1-5"
+    # Run a few minutes after the main appointment-feed schedule so new rows
+    # normally have their browser-downloadable PDF ready when the user opens the sheet.
+    - cron: "5 22 * * 0-4"
+    - cron: "5,35 0-10 * * 1-5"
   workflow_dispatch:
     inputs:
       backfill:
