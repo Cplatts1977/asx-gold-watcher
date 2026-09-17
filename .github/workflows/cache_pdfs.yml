@@ -1,6 +1,11 @@
 name: ASX Public PDF Cache
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "cache_pdfs.py"
+      - ".github/workflows/cache_pdfs.yml"
   schedule:
     - cron: "0 22 * * 0-4"
     - cron: "*/30 0-10 * * 1-5"
