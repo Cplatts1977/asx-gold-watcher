@@ -211,7 +211,7 @@ def today_items(client: httpx.Client):
 
 
 def backfill_items(client: httpx.Client):
-    cutoff = (datetime.now().date() - timedelta(days=7))
+    cutoff = datetime.now().date() - timedelta(days=7)
     all_items = {}
     for i, ticker in enumerate(sorted(TICKERS), start=1):
         try:
@@ -234,16 +234,18 @@ def backfill_items(client: httpx.Client):
 
 def main():
     repo = os.getenv("GITHUB_REPOSITORY", "Cplatts1977/asx-gold-watcher")
-    do_backfill = "--backfill" in sys.argv
+    requested_backfill = "--backfill" in sys.argv
     timeout = httpx.Timeout(90.0, connect=30.0)
     with httpx.Client(timeout=timeout, follow_redirects=True) as client:
         release = ensure_release(client, repo)
         assets = list_assets(client, repo, int(release["id"]))
         cleanup(client, repo, assets)
         existing = {str(a.get("name") or "") for a in assets}
+        do_backfill = requested_backfill or not existing
         items = backfill_items(client) if do_backfill else today_items(client)
         added = cache_items(items, client, repo, release, existing)
-        print(f"ASX public cache complete: {added} new PDFs from {len(items)} candidate announcements")
+        mode = "backfill" if do_backfill else "today"
+        print(f"ASX public cache complete ({mode}): {added} new PDFs from {len(items)} candidate announcements")
 
 
 if __name__ == "__main__":
